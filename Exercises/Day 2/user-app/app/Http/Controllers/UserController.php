@@ -42,7 +42,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         if($request->has(['first_name', 'last_name']) == false)
-            return response()->json(['error' => "Invalid input"]);
+            return response()->json(['data' => null, 'description' => "Error! Invalid input"]);
         $first_name = $request->input('first_name');
         $last_name = $request->input('last_name');
         DB::table('users')->insert([
