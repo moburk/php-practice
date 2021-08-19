@@ -42,7 +42,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         if($request->has(['first_name', 'last_name']) == false)
-            return response()->json(['data' => null, 'description' => "Error! Invalid input"]);
+            return response()->json(['data' => null, 'description' => "Error! Invalid input"], 400);
         $first_name = $request->input('first_name');
         $last_name = $request->input('last_name');
         DB::table('users')->insert([
@@ -67,6 +67,8 @@ class UserController extends Controller
     public function show($id)
     {
         $user = DB::table('users')->find($id);
+        if($user == null)
+            return response()->json(['data' => null, 'description' => "User could not be found"], 404);
         return response()->json([
             'data' => $user,
             'description' => 'Successfully retrieved user'
