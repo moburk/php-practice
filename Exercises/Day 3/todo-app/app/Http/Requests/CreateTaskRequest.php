@@ -28,7 +28,7 @@ class CreateTaskRequest extends FormRequest
         return [
             'name' => 'required|min:3|max:255',
             'status' => 'in:Pending,In Progress,Done',
-            'deadline' => 'date|after:yesterday',
+            'deadline' => 'date_format:Y-m-d|after_or_equal:today',
             'description'=>'max:255',
             'priority'=>'integer'
         ];
