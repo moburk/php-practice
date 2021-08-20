@@ -30,7 +30,7 @@ class CreateTaskRequest extends FormRequest
             'status' => 'in:Pending,In Progress,Done',
             'deadline' => 'date_format:Y-m-d|after_or_equal:today',
             'description'=>'max:255',
-            'priority'=>'integer'
+            'priority'=>'integer|'
         ];
     }
 

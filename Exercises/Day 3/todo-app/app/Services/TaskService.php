@@ -11,6 +11,13 @@ use function Symfony\Component\Translation\t;
 
 class TaskService
 {
+    protected $statusEnum = array(
+        'Pending' => 0,
+        'In Progress' => 1,
+        'Done' => 2
+    );
+
+
     public function createTask(CreateTaskRequest $request)
     {
         $validated = $request->validated();
@@ -20,7 +27,7 @@ class TaskService
 
     public function getTaskById($id)
     {
-        if (gettype($id) != 'integer')
+        if (is_numeric($id) == false)
             return response()->json([
                 'error_code' => 'RESOURCE_NOT_FOUND',
                 'description' => "Task ID in incorrect format"
@@ -33,6 +40,7 @@ class TaskService
                 'description' => "Could not find task $id"
             ], 404);
         }
+
         return response()->json([
             'data' => $task,
             'description' => 'Successfully returned task'
@@ -41,43 +49,56 @@ class TaskService
 
     public function getAllTasks($limit, $offset)
     {
-        $tasks = Task::offset($offset)->limit($limit)->orderBy('status')->orderBy('priority')->orderBy('deadline')->get();
+        $tasks = Task::offset($offset)
+            ->limit($limit)
+            ->orderBy('status')
+            ->orderBy('priority')
+            ->orderBy('deadline')
+            ->get();
+
         return $tasks;
     }
 
     public function updateTaskStatus(UpdateTaskStatusRequest $request, $id)
     {
         $validated = $request->validated();
-        if (gettype($id) != 'integer')
+
+        if (is_numeric($id) == false)
             return false;
+
         $task = Task::find($id);
-        if (($task->status == 'Done') || ($task->status == 'In Progress' && $validated['status'] != 'Done')
-            || ($task->status == $validated['status'])) {
+        if($task == null)
+            return false;
+
+        if($this->statusEnum[$task->status] >= $this->statusEnum[$validated['status']]) {
             return false;
         }
         $task->status = $validated['status'];
+
         $task->save();
         return true;
     }
 
     public function deleteTaskById($id)
     {
-        if (gettype($id) != 'integer')
+        if (is_numeric($id) == false)
             return false;
         $task = Task::find($id);
         if ($task == null) {
             return false;
         }
         $task->delete();
-
+        return true;
     }
 
-    public function getTasksByStatus(string $status)
+    public function getTasksByStatus(string $status, $limit, $offset)
     {
-        if ($status != 'Pending' || 'In Progress' || 'Done') {
+        if (array_key_exists($status, $this->statusEnum) == false) {
             return null;
         }
         $task = Task::where('status', $status)
+            ->offset($offset)
+            ->limit($limit)
             ->orderBy('priority')
             ->orderBy('deadline')
             ->get();

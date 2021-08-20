@@ -22,6 +22,7 @@ class TaskController extends Controller
         $status = $request->has('status') ? $request->query('status') : null;
         $offset = $request->has('offset') ? $request->query('offset') : 0;
         $limit = $request->has('limit') ? $request->query('limit') : 100;
+//        $priority = $request->has('priority') ? $request->query('priority') : null;
         if($status != null)
             return $this->getTasksByStatus($status, $limit, $offset);
         return $this->getAllTasks($limit,$offset);
@@ -118,7 +119,7 @@ class TaskController extends Controller
     }
 
     public function getTasksByStatus(string $status, $limit,  $offset) {
-        $tasks = $this->taskService->getTasksByStatus($status);
+        $tasks = $this->taskService->getTasksByStatus($status, $limit, $offset);
         $description = "Successfully retrieved all tasks that are $status";
         if($tasks == null)
             $description = "No tasks with $status status";
