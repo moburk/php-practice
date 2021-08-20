@@ -11,13 +11,14 @@ class Task extends Model
 
     protected $fillable = [
         'name',
+        'description',
         'status',
         'priority',
         'deadline'
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    protected $attributes = [
+        'status' => 'Pending',
+        'priority' => 2
+    ];
 }
