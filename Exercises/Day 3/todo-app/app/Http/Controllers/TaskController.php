@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateTaskRequest;
+use App\Http\Requests\UpdateTaskStatusRequest;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use App\Services\TaskService;
@@ -16,14 +17,31 @@ class TaskController extends Controller
         $this->taskService = $taskService;
     }
 
+    public function getTasks(Request $request)
+    {
+        $status = $request->has('status') ? $request->query('status') : null;
+        $offset = $request->has('offset') ? $request->query('offset') : 0;
+        $limit = $request->has('limit') ? $request->query('limit') : 100;
+        if($status != null)
+            return $this->getTasksByStatus($status, $limit, $offset);
+        return $this->getAllTasks($limit,$offset);
+    }
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getAllTasks()
+    public function getAllTasks($limit, $offset)
     {
-        return response()->json(["description" => "success"], 200);
+        $tasks = $this->taskService->getAllTasks($limit, $offset);
+        $description = "Successfully retrieved all tasks";
+        if($tasks == null)
+            $description = "No tasks added yet";
+        return response()->json([
+            "data" => $tasks,
+            "description" => $description
+        ]);
     }
 
     /**
@@ -34,7 +52,13 @@ class TaskController extends Controller
      */
     public function createTask(CreateTaskRequest $request)
     {
-        $this->taskService->createTask($request);
+        $task = $this->taskService->createTask($request);
+        if ($task == null) {
+            return response()->json([
+                'error_code' => 'DATABASE_ERROR',
+                'description' => 'Failed to create task'
+            ], 500);
+        }
         return response()->json([
             'data' => null,
             'description' => 'success'
@@ -45,11 +69,11 @@ class TaskController extends Controller
      * Display the specified resource.
      *
      * @param \App\Models\Task $task
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function getTaskById(Task $task)
+    public function getTaskById($id)
     {
-
+        return $this->taskService->getTaskById($id);
     }
 
     /**
@@ -57,21 +81,50 @@ class TaskController extends Controller
      *
      * @param \Illuminate\Http\Request $request
      * @param \App\Models\Task $task
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function updateTaskStatus(Request $request, Task $task)
+    public function updateTaskStatus(UpdateTaskStatusRequest $request, $id)
     {
-        //
+        $updated = $this->taskService->updateTaskStatus($request, $id);
+        if($updated == false){
+            return response()->json([
+                'error_code' => 'STATUS_NOT_UPDATED',
+                'description' => "Could not update status due to incorrect state transition"
+            ], 400);
+        }
+        return response()->json([
+            'data' => null,
+            'description' => 'Successfully updated task status'
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param \App\Models\Task $task
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function deleteTaskById(Task $task)
+    public function deleteTaskById($id)
     {
-        //
+        $deleted = $this->taskService->deleteTaskById($id);
+        if($deleted == false){
+            return response()->json([
+                'error_code' => 'RESOURCE_NOT_FOUND',
+                'description' => "Could not find task $id"
+            ], 404);
+        }
+        return response()->json(['data' => null,
+            'description' => 'Successfully deleted task']);
+    }
+
+    public function getTasksByStatus(string $status, $limit,  $offset) {
+        $tasks = $this->taskService->getTasksByStatus($status);
+        $description = "Successfully retrieved all tasks that are $status";
+        if($tasks == null)
+            $description = "No tasks with $status status";
+        return response()->json([
+            "data" => $tasks,
+            "description" => $description
+        ]);
     }
 }

@@ -3,10 +3,10 @@
 namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
-class CreateTaskRequest extends FormRequest
+class UpdateTaskStatusRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,11 +26,7 @@ class CreateTaskRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|min:3|max:255',
             'status' => 'in:Pending,In Progress,Done',
-            'deadline' => 'date|after:yesterday',
-            'description'=>'max:255',
-            'priority'=>'integer'
         ];
     }
 
